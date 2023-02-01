@@ -31,8 +31,7 @@ class Backtest:
          buy_transaction['strategy_returns'] = (buy_transaction['Exit Price'] - buy_transaction['Entry Price'].shift(1)) * buy_transaction['Qty']
          sell_transaction['strategy_returns'] = (sell_transaction['Entry Price'].shift(1) - sell_transaction['Exit Price']) * sell_transaction['Qty']                        
          self.backtesting = pd.concat([buy_transaction, sell_transaction])
-         self.backtesting = self.backtesting.drop("Date",axis=1)
-         print(self.backtesting.head(10))
+         self.backtesting = self.backtesting.drop("Date",axis=1)        
          self.backtesting = self.backtesting.sort_values(by='Date', ascending=True)
          self.backtesting.to_csv(r'./report_data/trade_transaction_' + strategiesName + '.CSV')
 

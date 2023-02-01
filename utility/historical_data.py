@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 from datetime import date
 
 start_date = date(2017,1,1)   #yyyy-mm-dd format
-end_date =  date(2023,1,25)     #yyyy-mm-dd format
+end_date =  date(2023,1,30)     #yyyy-mm-dd format
 
 # End date need today 
 
-auth_token = 'enctoken CpoqRTAfy13E/J5QbGuMDIyL+31ZTibDgDkgPENVhkTAlm582VVcBRKLdVaBI72SQxj0XtLH4RXkuyuHuUX3/62wD0oY0kVzVsc/cIgQgjyX2SFkvWO5RQ=='
+auth_token = 'enctoken 7dGR0wtBDlBj0jl2jtSsNLXksp0LWzMrxoVKMe8S7QvTo4+urXqy6N0CcZKKmCr+hW+VoaqmS7EKR5CK1wLXLkRLpYfKYwEEsJauyvsOVYUGclyvK6PJPQ=='
 
-def historical_data(start_date, end_date, auth_token, timeframe='15minute'):
+def historical_data(start_date, end_date, auth_token, timeframe='5minute'):
     userid = 'NY4565'
     timeframe= timeframe
     ciqrandom = '161746886774'
