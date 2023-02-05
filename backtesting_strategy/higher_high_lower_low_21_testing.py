@@ -17,28 +17,54 @@ now = datetime.now()
 current_time = now.strftime("%H:%M:%S")
 
 
-df = yf.download(tickers="CL=F",
-                            period="1d",
-                            interval="5m",
+df = yf.download(tickers="^NSEBANK",
+                            period="5d",
+                            interval="15m",
                             auto_adjust=True)
 
 # ------ Create indicator ------ #
 
-max_idx = argrelextrema(df['Close'].values, np.greater)[0]
-min_idx = argrelextrema(df['Close'].values, np.less)[0]
+max_idx = argrelextrema(df['Close'].values, np.greater, order=9)[0]
+min_idx = argrelextrema(df['Close'].values, np.less, order=9)[0]
 
 #----- ------- match High and low with Current data-------------# 
 
 df['max_high'] = df.iloc[max_idx]['Close']
 df['max_low'] = df.iloc[min_idx]['Close']
 
-Tande = 0
+df['trand-line'] = df['Close'].iloc[1]
+trand = df['Close'].iloc[1]
+
 
 for i in range(len(df)):
-    if df['Close'][i] == df['max_high'][i]:
-        df['max_high'][i] = df['max_high'][i-1]
-    elif df['Close'][i] == df['max_low'][i]:
-        df['max_high'][i] = df['max_low'][i-1]
+        if df['Close'][i-1] == df['max_high'][i-1]:
+            trand = df['High'][i]
+            df['trand-line'][i] = df['High'][i]
+        elif df['Close'][i-1] == df['max_low'][i-1]:
+            trand = df['Low'][i]
+            df['trand-line'][i] = df['Low'][i]
+        else:
+            df['trand-line'][i] = trand
+
+buy=[]
+buy_exit =[]
+sell=[]
+sell_exit=[]
+position = 0
+for i in range(len(df)):
+            if (df['Close'][i] > df['trand-line'][i-1]) & (position == 0):
+                position = 1
+                buy.append(i)
+            elif (df['Close'][i] < df['trand-line'][i-1]) & (position == 1):
+                position = 0
+                buy_exit.append(i)
+            elif (df['Close'][i] < df['trand-line'][i-1])  & (position == 0) :        
+                position = -1
+                sell.append(i)
+            elif (df['Close'][i] > df['trand-line'][i-1]) & (position == -1) :          
+                position = 0
+                sell_exit.append(i)
+
  
 
 fig = go.Figure(data=[go.Candlestick(x=df.index,
@@ -47,10 +73,11 @@ fig = go.Figure(data=[go.Candlestick(x=df.index,
                 low=df['Low'],
                 close=df['Close'])])
 fig.update_layout(title_text="title", margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=800, width=1750)
-fig.add_trace(go.Scatter(x=df.index, y=df['max_high']),)
-fig.add_trace(go.Scatter(x=df.index, y=df['max_low']),)
-fig.add_trace(go.Scatter(mode='markers', x=df.iloc[max_idx].index, y=df.iloc[max_idx]['Close'], marker=dict(color='Blue',size=12,)))
-fig.add_trace(go.Scatter(mode='markers', x=df.iloc[min_idx].index, y=df.iloc[min_idx]['Close'], marker=dict(color='Red',size=12,)))
+fig.add_trace(go.Scatter(x=df.index, y=df['trand-line']),)
+fig.add_trace(go.Scatter(mode='markers', x=df.iloc[buy].index, y=df.iloc[buy]['Close'], marker=dict(color='Blue',size=12,)))
+fig.add_trace(go.Scatter(mode='markers', x=df.iloc[buy_exit].index, y=df.iloc[buy_exit]['Close'], marker=dict(color='yellow',size=12,)))
+fig.add_trace(go.Scatter(mode='markers', x=df.iloc[sell].index, y=df.iloc[sell]['Close'], marker=dict(color='Red',size=12,)))
+fig.add_trace(go.Scatter(mode='markers', x=df.iloc[sell_exit].index, y=df.iloc[sell_exit]['Close'], marker=dict(color='green',size=12,)))
 # fig.add_trace(go.Scatter(mode='markers', x=df.iloc[sell].index, y=df.iloc[sell]['Close'], marker=dict(color='black',size=12,)))
 # fig.add_trace(go.Scatter(mode='markers', x=df.iloc[sell_exit].index, y=df.iloc[sell_exit]['Close'], marker=dict(color='yellow',size=12,)))
 
