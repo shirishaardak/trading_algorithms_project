@@ -11,32 +11,32 @@ from utility.backtesting import Backtest
 
 
 
-df = pd.read_csv(r'D:/trading_algorithms_project/stock_data/historical_data_nifty_bank_15minute.csv')
+df = pd.read_csv(r'D:/trading_algorithms_project/stock_data/historical_data_nifty_bank_15minute.csv', index_col='Date')
 
 
 # ------ Create indicator ------ #
 
-max_idx = argrelextrema(df['Close'].values, np.greater, order=5)[0]
-min_idx = argrelextrema(df['Close'].values, np.less, order=5)[0]
+max_idx = argrelextrema(df['Close'].values, np.greater_equal, order=21)[0]
+min_idx = argrelextrema(df['Close'].values, np.less_equal, order=21)[0]
 
 #----- ------- match High and low with Current data-------------# 
 
 df['max_high'] = df.iloc[max_idx]['Close']
 df['max_low'] = df.iloc[min_idx]['Close']
 
-df['trand-line-2'] = df['Close'].iloc[0]
+df['trand-line'] = df['Close'].iloc[0]
 trand = df['Close'].iloc[0]
 
 
 for i in range(len(df)):
         if df['Close'][i-1] == df['max_high'][i-1]:
             trand = df['High'][i]
-            df['trand-line-2'][i] = df['High'][i]
+            df['trand-line'][i] = df['High'][i]
         elif df['Close'][i-1] == df['max_low'][i-1]:
             trand = df['Low'][i]
-            df['trand-line-2'][i] = df['Low'][i]
+            df['trand-line'][i] = df['Low'][i]
         else:
-            df['trand-line-2'][i] = trand
+            df['trand-line'][i] = trand
 
 print(df)
 
