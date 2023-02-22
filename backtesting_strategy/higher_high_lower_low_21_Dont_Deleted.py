@@ -6,6 +6,7 @@ from scipy.signal import argrelextrema
 import plotly.graph_objects as go 
 import yfinance as yf
 from utility.backtesting import Backtest
+import talib
 
 
 
