@@ -71,7 +71,7 @@ for i in range(len(df)):
 
 orders = pd.DataFrame(orders)
 
-orders.to_csv(r'D:/trading_algorithms_project/report_data/heikin_ashi_paper.csv',)
+orders.to_csv(r'D:/trading_algorithms_project/report_data/paper_data/heikin_ashi_paper.csv',)
 
 
 

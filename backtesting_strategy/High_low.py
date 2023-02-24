@@ -18,11 +18,11 @@ now = datetime.now()
 current_time = now.strftime("%H:%M:%S")
 
 
-df = yf.download(tickers="^NSEBANK",
-                                period="3d",
-                                interval="15m",
-                                auto_adjust=True)
-#df = pd.read_csv(r'D:/trading_algorithms_project/stock_data/historical_data_nifty_bank_15minute.csv', index_col='Date')
+# df = yf.download(tickers="^NSEBANK",
+#                                 period="10d",
+#                                 interval="5m",
+#                                 auto_adjust=True)
+df = pd.read_csv(r'D:/trading_algorithms_project/stock_data/historical_data_nifty_bank_15minute.csv', index_col='Date')
 
 def heikin_ashi(df):
     heikin_ashi_df = df
@@ -43,31 +43,40 @@ def heikin_ashi(df):
 
 df = heikin_ashi(df)
 
+
+
+df['sam-11'] = ta.ema(close=df['Close'], length=11)
+df['sam-14-sam-28'] = df['Close'] - df['sam-28']
 # ------ Create indicator ------ #
-
-max_idx = argrelextrema(df['Close'].values, np.greater_equal, order=11)[0]
-min_idx = argrelextrema(df['Close'].values, np.less_equal, order=11)[0]
-# max_idx= max_idx[:-1]
-# min_idx= min_idx[:-1]
-#----- ------- match High and low with Current data-------------# 
-
-df['max_high'] = df.iloc[max_idx]['Close']
-df['max_low'] = df.iloc[min_idx]['Close']
-
-df['trand-line'] = df['Close'].iloc[0]
-trand = df['Close'].iloc[0]
-
-
+investment = 500000
+lot_size= 25   
+position = 0
+bt = Backtest()
+orders = []
+buy=[]
+sell=[]
 for i in range(len(df)):
-        if df['Close'][i-1] == df['max_high'][i-1]:
-            trand = df['High'][i]
-            df['trand-line'][i] = df['High'][i]
-        elif df['Close'][i-1] == df['max_low'][i-1]:
-            trand = df['Low'][i]
-            df['trand-line'][i] = df['Low'][i]
-        else:
-            df['trand-line'][i] = trand
+            if (df['sam-14-sam-28'][i] > 100) & (position == 0):
+                position = 1
+                buy.append(i)
+                orders.append({'Date': df.index[i],  'buy_sell':'Buy',  "entry_price": df['Close'][i], "exit_price":0})
+            elif (df['sam-14-sam-28'][i] < 0) & (position == 1):
+                position = 0
+                buy.append(i)
+                orders.append({'Date': df.index[i],  'buy_sell':'Buy-exit',  "entry_price": 0, "exit_price":df['Close'][i]})
+            elif (df['sam-14-sam-28'][i] < -100) &  (position == 0) :        
+                position = -1
+                sell.append(i)
+                orders.append({'Date': df.index[i],  'buy_sell':'Sell',  "entry_price":df['Close'][i], "exit_price":0})
+            elif (df['sam-14-sam-28'][i] > 0) & (position == -1) :          
+                position = 0
+                sell.append(i)
+                orders.append({'Date': df.index[i],  'buy_sell':'sell-exit',  "entry_price": 0, "exit_price":df['Close'][i]})
 
+
+orders = pd.DataFrame(orders)
+
+orders.to_csv(r'D:/trading_algorithms_project/report_data/close_ema_11_days_different_paper.csv',)
 
 fig = make_subplots(rows=2, cols=1,)
 fig.add_trace(go.Candlestick(x=df.index,
@@ -76,11 +85,15 @@ fig.add_trace(go.Candlestick(x=df.index,
                 low=df['Low'],
                 close=df['Close']), row=1, col=1)
 fig.update_layout(title_text="title", margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=800, width=1750)
-fig.add_trace(go.Scatter(x=df.index, y=df['trand-line']),)
-# fig.add_trace(go.Scatter(x=df.index, y=df['max_low']),)
+fig.add_trace(go.Scatter(mode='markers', x=df.iloc[buy].index, y=df.iloc[buy]['Close'], marker=dict(color='Blue',size=12,), name="Buy"), row=1, col=1)
+fig.add_trace(go.Scatter(mode='markers', x=df.iloc[sell].index, y=df.iloc[sell]['Close'], marker=dict(color='yellow',size=12,), name="Sell"), row=1, col=1)
+fig.add_trace(go.Scatter(x=df.index, y=df['sam-28']), row=1, col=1)
+fig.add_trace(go.Scatter(x=df.index, y=df['sam-28']), row=1, col=1)
 fig.update_xaxes(type='category', rangeslider_visible=False)
 fig.update_yaxes(fixedrange=False)
+
 st. set_page_config(layout="wide")
 st.title(current_time)
 st.write(fig)
-st_autorefresh(interval=5 * 60 * 1000, key="dataframerefresh")
+st.table(orders.tail(5))
+st_autorefresh(interval=15 * 60 * 1000, key="dataframerefresh")
