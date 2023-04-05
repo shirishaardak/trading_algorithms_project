@@ -36,46 +36,7 @@ def strategies():
 strategies()
 
 df = pd.read_csv(r'D:/trading_algorithms_project/paper_trending_strategy/stock_data/historical_data_nifty_bank_15minute.CSV',)
-#df = heikin_ashi(df)
-# ------ Create indicator ------ #
-df['EMA-11'] = ta.ema(close=df['Close'], length=11)
-max_idx = argrelextrema(df['Close'].values, np.greater_equal, order=9)[0]
-min_idx = argrelextrema(df['Close'].values, np.less_equal, order=9)[0]
 
-#----- ------- match High and low with Current data-------------# 
-
-df['max_high'] = df.iloc[max_idx]['Close']
-df['max_low'] = df.iloc[min_idx]['Close']
-df['max_high'].fillna(method='pad', inplace=True)
-df['max_low'].fillna(method='pad', inplace=True)
-
-df['trand-line'] = df['Close'].iloc[0]
-trand = df['Close'].iloc[0]
-
-df['trand-line-2'] = df['Close'].iloc[0]
-trand_2 = df['Close'].iloc[0]
-
-
-for i in range(len(df)):
-        if df['Close'][i] == df['max_high'][i]:
-            trand = df['High'][i]
-            df['trand-line'][i] = df['High'][i]
-        elif df['Close'][i] == df['max_low'][i]:
-            trand = df['Low'][i]
-            df['trand-line'][i] = df['Low'][i]
-        elif df['Close'][i] >= df['max_high'][i-1]:
-            trand_2 = df['max_low'][i-1]
-            df['trand-line-2'][i] = df['max_low'][i-1]
-        elif df['Close'][i] <= df['max_low'][i-1]:
-            trand_2 = df['max_high'][i-1]
-            df['trand-line-2'][i] = df['max_high'][i-1]
-        else:
-            df['trand-line'][i] = trand
-            df['trand-line-2'][i] = trand_2
-
-print(df)
-
-df = df.tail(100)
 
 fig = make_subplots(rows=2, cols=1,)
 fig.add_trace(go.Candlestick(x=df.index,
@@ -84,11 +45,6 @@ fig.add_trace(go.Candlestick(x=df.index,
                 low=df['Low'],
                 close=df['Close']), row=1, col=1)
 fig.update_layout(title_text="title", margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=800, width=1750)
-# fig.add_trace(go.Scatter(x=df.index, y=df['max_high'], mode="markers", marker_size=15, marker_color='green'),)
-# fig.add_trace(go.Scatter(x=df.index, y=df['max_low'], mode="markers", marker_size=15, marker_color='red'),)
-fig.add_trace(go.Scatter(x=df.index, y=df['EMA-11']), row=1, col=1)
-fig.add_trace(go.Scatter(x=df.index, y=df['trand-line']), row=1, col=1)
-fig.add_trace(go.Scatter(x=df.index, y=df['trand-line-2']), row=1, col=1)
 fig.update_xaxes(type='category', rangeslider_visible=False)
 fig.update_yaxes(fixedrange=False)
 st. set_page_config(layout="wide")
