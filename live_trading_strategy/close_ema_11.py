@@ -7,7 +7,6 @@ import streamlit as st
 import yfinance as yf
 from streamlit_autorefresh import st_autorefresh
 from datetime import datetime
-from scipy.signal import argrelextrema
 from plotly.subplots import make_subplots
 import pandas_ta as ta
 from utility.backtesting import Backtest
@@ -46,38 +45,36 @@ df = heikin_ashi(df)
 
 
 df['sam-11'] = ta.ema(close=df['Close'], length=11)
-df['sam-14-sam-28'] = df['Close'] - df['sam-28']
+df['sam-14-sam-28'] = df['Close'] - df['sam-11']
 
 # ------ Create indicator ------ #
 investment = 500000
 lot_size= 25   
 position = 0
 bt = Backtest()
-orders = []
 buy=[]
 sell=[]
 for i in range(len(df)):
             if (df['sam-14-sam-28'][i] > 100) & (position == 0):
                 position = 1
                 buy.append(i)
-                orders.append({'Date': df.index[i],  'buy_sell':'Buy',  "entry_price": df['Close'][i], "exit_price":0})
+                bt.orders(df.index[i], 'Bank', lot_size, position= position, buy_sell='Buy', entry_price=df['Close'][i], exit_price=0)
             elif (df['sam-14-sam-28'][i] < 0) & (position == 1):
                 position = 0
                 buy.append(i)
-                orders.append({'Date': df.index[i],  'buy_sell':'Buy-exit',  "entry_price": 0, "exit_price":df['Close'][i]})
+                bt.orders(df.index[i], 'Bank', lot_size,  position= position, buy_sell='Buy_Exit', entry_price=0, exit_price=df['Close'][i])
             elif (df['sam-14-sam-28'][i] < -100) &  (position == 0) :        
                 position = -1
                 sell.append(i)
-                orders.append({'Date': df.index[i],  'buy_sell':'Sell',  "entry_price":df['Close'][i], "exit_price":0})
+                bt.orders(df.index[i], 'Bank', lot_size, position= position, buy_sell='Sell', entry_price=df['Close'][i], exit_price=0)
             elif (df['sam-14-sam-28'][i] > 0) & (position == -1) :          
                 position = 0
                 sell.append(i)
-                orders.append({'Date': df.index[i],  'buy_sell':'sell-exit',  "entry_price": 0, "exit_price":df['Close'][i]})
+                bt.orders(df.index[i], 'Bank', lot_size,  position= position, buy_sell='Sell_exit', entry_price=0, exit_price=df['Close'][i])
 
 
-orders = pd.DataFrame(orders)
 
-orders.to_csv(r'D:/trading_algorithms_project/report_data/paper_data/close_ema_11_days_different_paper.csv',)
+report = bt.trade_transaction('paper_close_ema_11')
 
 fig = make_subplots(rows=2, cols=1,)
 fig.add_trace(go.Candlestick(x=df.index,
@@ -88,13 +85,12 @@ fig.add_trace(go.Candlestick(x=df.index,
 fig.update_layout(title_text="title", margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=800, width=1750)
 fig.add_trace(go.Scatter(mode='markers', x=df.iloc[buy].index, y=df.iloc[buy]['Close'], marker=dict(color='Blue',size=12,), name="Buy"), row=1, col=1)
 fig.add_trace(go.Scatter(mode='markers', x=df.iloc[sell].index, y=df.iloc[sell]['Close'], marker=dict(color='yellow',size=12,), name="Sell"), row=1, col=1)
-fig.add_trace(go.Scatter(x=df.index, y=df['sam-28']), row=1, col=1)
-fig.add_trace(go.Scatter(x=df.index, y=df['sam-28']), row=1, col=1)
+fig.add_trace(go.Scatter(x=df.index, y=df['sam-11']), row=1, col=1)
 fig.update_xaxes(type='category', rangeslider_visible=False)
 fig.update_yaxes(fixedrange=False)
 
 st. set_page_config(layout="wide")
 st.title(current_time)
 st.write(fig)
-st.table(orders.tail(5))
+#st.table(orders.tail(5))
 st_autorefresh(interval=15 * 60 * 1000, key="dataframerefresh")
