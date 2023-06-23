@@ -23,10 +23,13 @@ df = ta.ha(open_=df.Open, high=df.High, low=df.Low, close=df.Close,)
 df['RSI'] = ta.rsi(close=df.HA_close, length=14)
 df['ATR'] = ta.atr(high=df.HA_high, low=df.HA_low, close=df.HA_close, length=14)
 df['ATR-20'] = ta.sma(close=df['ATR'], length=20)
-max_idx = argrelextrema(df['HA_close'].values, np.greater_equal, order=10)[0]
-min_idx = argrelextrema(df['HA_close'].values, np.less_equal, order=10)[0]
+max_idx = argrelextrema(df['HA_high'].values, np.greater_equal, order=10)[0]
+min_idx = argrelextrema(df['HA_low'].values, np.less_equal, order=10)[0]
 # max_idx = max_idx[:-1]
 # min_idx = min_idx[:-1]
+
+print(max_idx)
+print(min_idx)
 
 high_low= np.concatenate((max_idx, min_idx))
 high_low_up = np.sort(high_low)
@@ -41,11 +44,15 @@ trand = df['HA_close'].iloc[0]
 
 
 for i in range(len(df)):
-    if df['HA_close'][i] == df['max_high_low'][i]:
-        trand = df['HA_close'][i-1]
-        df['trand-line'][i] = df['HA_close'][i-1]      
+    if df['HA_close'][i] == df['max_high'][i]:
+        trand = df['HA_high'][i]
+        df['trand-line'][i] = df['HA_high'][i]
+    elif df['HA_close'][i] == df['max_low'][i]:
+        trand = df['HA_low'][i]
+        df['trand-line'][i] = df['HA_low'][i]
     else:
         df['trand-line'][i] = trand
+
 
 # ------ Create indicator ------ #
 
@@ -56,16 +63,17 @@ fig.add_trace(go.Candlestick(x=df.index,
                 high=df['HA_high'],
                 low=df['HA_low'],
                 close=df['HA_close']), row=1, col=1)
-fig.update_layout(title_text="title", margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=1500, width=1200)
-fig.add_trace(go.Scatter(mode='markers', x=df.iloc[high_low_up].index, y=df.iloc[high_low_up]['HA_close'], marker=dict(color='Blue',size=12,), name="Buy"), row=1, col=1)
+fig.update_layout(title_text="title", margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=1500, width=1800)
+fig.add_trace(go.Scatter(mode='markers', x=df.index, y=df['max_high_low'], marker=dict(color='Blue',size=12,), name="Buy"), row=1, col=1)
 #fig.add_trace(go.Scatter(mode='markers', x=df.iloc[min_idx].index, y=df.iloc[min_idx]['HA_low'], marker=dict(color='Red',size=12,), name="Sell"), row=1, col=1)
 fig.add_trace(go.Scatter(x=df.index, y=df['trand-line']))
-fig.add_trace(go.Scatter(x=df.index, y=df['RSI']), row=2, col=1)
-fig.add_trace(go.Scatter(x=df.index, y=df['ATR']), row=3, col=1)
-fig.add_trace(go.Scatter(x=df.index, y=df['ATR-20']), row=3, col=1)
+#fig.add_trace(go.Scatter(x=df.index, y=df['max_high_low']))
+# fig.add_trace(go.Scatter(x=df.index, y=df['RSI']), row=2, col=1)
+# fig.add_trace(go.Scatter(x=df.index, y=df['ATR']), row=3, col=1)
+# fig.add_trace(go.Scatter(x=df.index, y=df['ATR-20']), row=3, col=1)
 fig.update_xaxes(type='category', rangeslider_visible=False)
 fig.update_yaxes(fixedrange=False)
 st. set_page_config(layout="wide")
 st.title(current_time)
 st.write(fig)
-st_autorefresh(interval=5 * 60 * 1000, key="dataframerefresh")
+st_autorefresh(interval=1 * 60 * 1000, key="dataframerefresh")
