@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, 'D:/trading_algorithms_project/backtesting_strategy')
+sys.path.insert(0, 'C:/Shirish/strategy_analysis/trading_algorithms_project/backtesting_strategy/')
 import pandas as pd
 import numpy as np
 from datetime import datetime, date
@@ -22,11 +22,11 @@ def data_feed():
 
     df = df[-1:]
 
-    df.to_csv(r'D:/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/Data_testing.csv', mode='a', index=True, header=False)
+    df.to_csv(r'C:/Shirish/strategy_analysis/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/testing.csv', mode='a', index=True, header=False)
 
 data_feed()
 
-df = pd.read_csv(r'D:/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/Data_testing.csv', index_col='Datetime')
+df = pd.read_csv(r'C:/Shirish/strategy_analysis/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/testing.csv', index_col='Datetime')
 
 #print(df)
 

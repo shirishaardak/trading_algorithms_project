@@ -7,7 +7,7 @@ from plotly.subplots import make_subplots
 from scipy.signal import argrelextrema
 import plotly.graph_objects as go 
 import yfinance as yf
-from utility.backtesting import Backtest
+#from utility.backtesting import Backtest
 import pandas_ta as ta
 import streamlit as st  
 from streamlit_autorefresh import st_autorefresh
@@ -53,14 +53,13 @@ def data_feed():
         else:
             df['trand-line'][i] = trand
 
-    df = df.iloc[-1:]
-    print(df)
-    df.to_csv(r'D:/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/Data_testing_gold.csv', mode='a', index=True, header=False)
+    
+    df.to_csv(r'C:/Shirish/strategy_analysis/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/testing.csv')
 
  
 data_feed()
 
-df = pd.read_csv(r'D:/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/Data_testing_gold.csv', index_col='Datetime')
+df = pd.read_csv(r'C:/Shirish/strategy_analysis/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/testing.csv', index_col='Datetime')
 
 orders=[]
 list=[]
@@ -83,14 +82,19 @@ for i in range(len(df)):
                 orders.append({'date': df.index[i],  'buy_sell':'sell_exit',  'entry_price':0, 'exit_price':df['HA_close'][i]})
                 list.append(i)
 
-orders.to_csv(r'D:/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/Data_testing_order.csv',  index=True,)
+orders = orders[-1:]
+pd.DataFrame(orders).to_csv(r'C:/Shirish/strategy_analysis/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/Data_testing_order.csv',  mode='a', index=True, header=False,)
+data = pd.read_csv(r'C:/Shirish/strategy_analysis/trading_algorithms_project/backtesting_strategy/stock_data/paper_data/Data_testing_order.csv')
+
+
+
 fig = make_subplots(rows=3, cols=1,)
 fig.add_trace(go.Candlestick(x=df.index,
                 open=df['HA_open'],
                 high=df['HA_high'],
                 low=df['HA_low'],
                 close=df['HA_close']), row=1, col=1)
-fig.update_layout(title_text="title", margin={"r": 0, "t": 0, "l": 0, "b": 0}, height=800, width=1750)
+fig.update_layout(title_text="title", margin={"r": 0, "t": 0, "l": 0, "b": 0}, width=1200)
 fig.update_xaxes(type='category', rangeslider_visible=False)
 fig.add_trace(go.Scatter(mode='markers', x=df.iloc[list].index, y=df.iloc[list]['HA_close'], marker=dict(color='black',size=12,), name="Buy"), row=1, col=1)
 fig.add_trace(go.Scatter(mode='markers', x=df.index, y=df['max_high'], marker=dict(color='green',size=6,), name="buy"), row=1, col=1)
@@ -103,5 +107,5 @@ fig.update_yaxes(fixedrange=False)
 st.set_page_config(layout="wide")
 st.title(current_time)
 st.write(fig)
-st.table(df)
+st.table(data)
 st_autorefresh(interval=5 * 60 * 1000, key="dataframerefresh")
